@@ -18,9 +18,9 @@
 
 export const DEFAULT_TIMEOUT = 20_000;
 export const PAGE_SIZE = 500;
-// 40 pages of 500: far beyond a home or small-office inventory, and a bound
-// against a server answering a wrong `total` forever.
-const MAX_PAGES = 40;
+// A bound against a server answering a wrong `total` forever: past it, the
+// read fails rather than count part of the inventory.
+const MAX_PAGES = 200;
 
 export class SnipeItError extends Error {
   /**
@@ -66,10 +66,20 @@ export class SnipeItClient {
       if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
         throw new SnipeItError('timeout', `No answer from Snipe-IT within ${this.timeout} ms`);
       }
-      const cause = err?.cause?.code ?? err?.cause?.message ?? err?.message ?? 'error';
+      // Never the message of an error raised before sending: it may quote the
+      // Authorization header.
+      const cause = err?.cause?.code ?? err?.name ?? 'error';
       throw new SnipeItError('unreachable', `Snipe-IT unreachable (${cause})`);
     }
-    const raw = await response.text().catch(() => '');
+    let raw;
+    try {
+      raw = await response.text();
+    } catch (err) {
+      if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+        throw new SnipeItError('timeout', `No answer from Snipe-IT within ${this.timeout} ms`);
+      }
+      raw = '';
+    }
     const where = path.split('?')[0];
     let data;
     try {
@@ -129,10 +139,10 @@ export class SnipeItClient {
       rows.push(...data.rows);
       const total = Number(data.total);
       if (data.rows.length === 0 || !Number.isFinite(total) || rows.length >= total) {
-        break;
+        return rows;
       }
     }
-    return rows;
+    throw new SnipeItError('invalid', `${path}: more than ${MAX_PAGES} pages`);
   }
 
   hardware() {

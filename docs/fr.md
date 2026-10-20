@@ -64,7 +64,8 @@ restent sans valeur.
 
 **Échéances Snipe-IT** : quatre tuiles (matériels, prêtés, garanties et
 licences qui expirent, consommables en stock bas) et les échéances des sept
-prochains jours, ce qui est en retard d'abord (en rouge) : retours prévus,
+prochains jours, ce qui est en retard d'abord (en rouge). Sans le droit de voir
+les consommables, la tuile du stock bas n'apparaît pas : retours prévus,
 audits, fins prévues des maintenances, garanties et licences qui expirent.
 Lecture seule.
 

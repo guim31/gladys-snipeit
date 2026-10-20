@@ -59,7 +59,8 @@ not view the licenses or the consumables, their features stay without value.
 
 **Snipe-IT deadlines**: four tiles (assets, checked out, warranties and
 licenses expiring, consumables low) and the deadlines of the coming seven
-days, what is late first (red): expected check-ins, audits, planned ends of
+days, what is late first (red). Without the right to view the consumables,
+the low-stock tile is left out: expected check-ins, audits, planned ends of
 maintenances, warranties and licenses ending. Read only.
 
 ## Scene triggers

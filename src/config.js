@@ -76,7 +76,9 @@ export function normalizeConfig(raw = {}) {
   // A token pasted with its scheme ("Bearer eyJ...") works as well.
   const apiToken = text(source.api_token)
     .replace(/^bearer\s+/i, '')
-    .replace(/\s+/g, '');
+    // Spaces, line breaks and control characters cannot be part of a token.
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\s\x00-\x1f\x7f]+/g, '');
   const refresh = String(source.refresh_minutes ?? '');
   return {
     url,

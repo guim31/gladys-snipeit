@@ -63,7 +63,8 @@ las licencias o los consumibles, sus funciones se quedan sin valor.
 
 **Vencimientos Snipe-IT**: cuatro mosaicos (activos, prestados, garantías y
 licencias que vencen, consumibles con stock bajo) y los vencimientos de los
-próximos siete días, lo atrasado primero (en rojo): devoluciones previstas,
+próximos siete días, lo atrasado primero (en rojo). Sin permiso para ver los
+consumibles, no aparece el mosaico de stock bajo: devoluciones previstas,
 auditorías, fines previstos de mantenimientos, garantías y licencias que
 vencen. Solo lectura.
 

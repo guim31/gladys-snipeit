@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // Small persistence under /data (the only writable path of the container): the
-// warranties and maintenance already announced by the scene triggers, so a
-// restart does not announce them again. Losing the file is harmless: the next
+// deadlines already announced by the scene triggers, so a restart does not
+// announce them again. Losing the file is harmless: the next
 // read becomes a silent baseline again.
 // (Adapted from guim31/gladys-pihole.)
 // -----------------------------------------------------------------------------

@@ -184,6 +184,8 @@ export class Hub {
     clearInterval(this.refreshTimer);
     clearTimeout(this.widgetTimer);
     this.refreshTimer = null;
+    // A read under way finishes first, so what it announced is saved.
+    await this.refreshing?.catch(() => {});
     await this.store.flush();
   }
 
@@ -345,23 +347,24 @@ export class Hub {
    * consumable is announced again once it went back above its minimum.
    */
   async #announce(summary) {
+    // The most urgent kinds first; each kind has its own cap per read.
     const current = {
-      warranty: summary.warranties.map((asset) => [
-        `${asset.id}|${asset.warranty}`,
-        () => this.#warrantyEvent(asset),
+      checkin: summary.checkinsOverdue.map((asset) => [
+        `${asset.id}|${asset.expectedCheckin}`,
+        () => this.#checkinEvent(asset),
       ]),
+      consumable:
+        summary.consumablesLow &&
+        summary.consumablesLow.map((item) => [String(item.id), () => this.#consumableEvent(item)]),
       license:
         summary.licenses &&
         summary.licenses.map((license) => [
           `${license.id}|${license.expires}`,
           () => this.#licenseEvent(license),
         ]),
-      consumable:
-        summary.consumablesLow &&
-        summary.consumablesLow.map((item) => [String(item.id), () => this.#consumableEvent(item)]),
-      checkin: summary.checkinsOverdue.map((asset) => [
-        `${asset.id}|${asset.expectedCheckin}`,
-        () => this.#checkinEvent(asset),
+      warranty: summary.warranties.map((asset) => [
+        `${asset.id}|${asset.warranty}`,
+        () => this.#warrantyEvent(asset),
       ]),
     };
     const instance = this.config.url;
@@ -370,20 +373,22 @@ export class Hub {
     for (const [kind, entries] of Object.entries(current)) {
       const done = known?.[kind];
       if (entries && Array.isArray(done)) {
-        for (const [key, event] of entries) {
-          if (!done.includes(key)) {
-            events.push([kind, key, event]);
-          }
+        const fresh = entries.filter(([key]) => !done.includes(key));
+        if (fresh.length > MAX_EVENTS_PER_READ) {
+          logger.info(`${fresh.length} ${kind} events at once: ${MAX_EVENTS_PER_READ} announced`);
+        }
+        for (const [key, event] of fresh.slice(0, MAX_EVENTS_PER_READ)) {
+          events.push([kind, key, event]);
         }
       }
-    }
-    if (events.length > MAX_EVENTS_PER_READ) {
-      logger.info(`${events.length} deadlines at once: ${MAX_EVENTS_PER_READ} announced`);
     }
     // An event Gladys did not take (disconnected, restarting) is not
     // recorded: the next read fires it again.
     const failed = new Set();
-    for (const [kind, key, event] of events.slice(0, MAX_EVENTS_PER_READ)) {
+    for (const [kind, key, event] of events) {
+      if (this.stopped) {
+        return;
+      }
       const [trigger, data] = event();
       try {
         await this.gladys.publishSceneEvent(trigger, data);
@@ -622,11 +627,14 @@ export class Hub {
     if (message) {
       return message;
     }
+    if (!this.summary) {
+      return commandMessage('unreachable');
+    }
     const { assets, licenseCount } = this.summary;
     return Object.fromEntries(
       Object.entries(TEST_TEXT).map(([language, render]) => [
         language,
-        render(this.version, assets, licenseCount ?? 0),
+        render(this.version, assets, licenseCount),
       ]),
     );
   }

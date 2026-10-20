@@ -138,23 +138,31 @@ export const STATUS_TEXT = {
 };
 
 // The "Test the connection" action.
+// `licenses` is null when the token may not view them.
 export const TEST_TEXT = {
   en: (version, assets, licenses) =>
-    `Snipe-IT ${version} answers: ${assets} asset(s), ${licenses} license(s).`,
+    `Snipe-IT ${version} answers: ${assets} asset(s)` +
+    (licenses === null ? '.' : `, ${licenses} license(s).`),
   fr: (version, assets, licenses) =>
-    `Snipe-IT ${version} répond : ${assets} matériel(s), ${licenses} licence(s).`,
+    `Snipe-IT ${version} répond : ${assets} matériel(s)` +
+    (licenses === null ? '.' : `, ${licenses} licence(s).`),
   de: (version, assets, licenses) =>
-    `Snipe-IT ${version} antwortet. Assets: ${assets}, Lizenzen: ${licenses}.`,
+    `Snipe-IT ${version} antwortet. Assets: ${assets}` +
+    (licenses === null ? '.' : `, Lizenzen: ${licenses}.`),
   es: (version, assets, licenses) =>
-    `Snipe-IT ${version} responde: ${assets} activo(s), ${licenses} licencia(s).`,
+    `Snipe-IT ${version} responde: ${assets} activo(s)` +
+    (licenses === null ? '.' : `, ${licenses} licencia(s).`),
 };
 
 // Errors of the scene action.
 export const COMMAND_ERRORS = {
-  en: { unreachable: 'Snipe-IT does not answer: the deadlines could not be read.' },
-  fr: { unreachable: "Snipe-IT ne répond pas : les échéances n'ont pas pu être lues." },
-  de: { unreachable: 'Snipe-IT antwortet nicht: die Fristen konnten nicht gelesen werden.' },
-  es: { unreachable: 'Snipe-IT no responde: no se pudieron leer los vencimientos.' },
+  en: { unreachable: 'Snipe-IT could not be read: see the status in the configuration.' },
+  fr: { unreachable: "Snipe-IT n'a pas pu être lu : voyez l'état dans la configuration." },
+  de: {
+    unreachable:
+      'Snipe-IT konnte nicht gelesen werden: sieh dir den Status in der Konfiguration an.',
+  },
+  es: { unreachable: 'No se pudo leer Snipe-IT: consulte el estado en la configuración.' },
 };
 
 /** { en, fr, de, es } of a coded command error. */

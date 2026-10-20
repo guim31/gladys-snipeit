@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
-// The "Snipe-IT deadlines" dashboard widget: four tiles (assets, checked out,
-// warranties and licenses expiring, consumables low) and the list of the
+// The "Snipe-IT deadlines" dashboard widget: tiles (assets, checked out,
+// expiring, consumables low when readable) and the list of the
 // deadlines of the week — what is late first, then the soonest.
 // Read only: no button.
 // -----------------------------------------------------------------------------
@@ -63,7 +63,7 @@ export function buildContent(hub, { language = 'en' } = {}) {
     };
   }
   const expiring = summary.warranties.length + (summary.licenses?.length ?? 0);
-  const low = summary.consumablesLow?.length ?? 0;
+  const low = summary.consumablesLow?.length;
   return {
     // The hub nudges the widget after every read.
     ttl_seconds: 900,
@@ -82,13 +82,18 @@ export function buildContent(hub, { language = 'en' } = {}) {
         icon: 'shield',
         color: expiring > 0 ? WIDGET_COLORS.WARNING : WIDGET_COLORS.SUCCESS,
       },
-      {
-        type: 'value',
-        label: pick(TEXT.low, language),
-        value: low,
-        icon: 'package',
-        color: low > 0 ? WIDGET_COLORS.DANGER : WIDGET_COLORS.SUCCESS,
-      },
+      // A token that may not view the consumables: no tile rather than a false 0.
+      ...(summary.consumablesLow
+        ? [
+            {
+              type: 'value',
+              label: pick(TEXT.low, language),
+              value: low,
+              icon: 'package',
+              color: low > 0 ? WIDGET_COLORS.DANGER : WIDGET_COLORS.SUCCESS,
+            },
+          ]
+        : []),
       summary.deadlines.length > 0
         ? {
             type: 'card-list',

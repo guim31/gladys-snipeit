@@ -61,7 +61,8 @@ Funktionen ohne Wert.
 
 **Snipe-IT-Fristen**: vier Kacheln (Assets, herausgegeben, ablaufende
 Garantien und Lizenzen, knappes Verbrauchsmaterial) und die Fristen der
-nächsten sieben Tage, Überfälliges zuerst (rot): erwartete Rückgaben, Audits,
+nächsten sieben Tage, Überfälliges zuerst (rot). Ohne das Recht, das
+Verbrauchsmaterial zu sehen, fehlt die Kachel für knappes Material: erwartete Rückgaben, Audits,
 geplante Wartungsenden, ablaufende Garantien und Lizenzen. Nur lesend.
 
 ## Szenen-Auslöser

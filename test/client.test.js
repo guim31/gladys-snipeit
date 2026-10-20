@@ -91,7 +91,12 @@ test('errors: refused token, permission, deactivated user, login redirect, HTML,
     await kindOf(
       (url, init) =>
         new Promise((resolve, reject) => {
-          init.signal.addEventListener('abort', () => reject(init.signal.reason));
+          // A pending timer keeps Node 22 alive: AbortSignal.timeout does not.
+          const late = setTimeout(resolve, 5_000);
+          init.signal.addEventListener('abort', () => {
+            clearTimeout(late);
+            reject(init.signal.reason);
+          });
         }),
     ),
     'timeout',
@@ -105,9 +110,17 @@ test('a server answering a wrong total does not loop forever', async () => {
     return new Response(JSON.stringify({ total: 1e9, rows: [{ id: calls }] }), { status: 200 });
   };
   const client = new SnipeItClient({ url: HOST, token: TOKEN, fetch });
-  const rows = await client.licenses();
-  assert.equal(rows.length, 40);
-  assert.equal(calls, 40);
+  const err = await client.licenses().catch((error) => error);
+  assert.equal(err.kind, 'invalid');
+  assert.equal(calls, 200);
+});
+
+test('a token with a control character never reaches an error message', async () => {
+  assert.equal(normalizeConfig({ api_token: 'ab\u0000c\u007f' }).apiToken, 'abc');
+  const client = new SnipeItClient({ url: HOST, token: 'abc\u0000SECRET' });
+  const err = await client.hardware().catch((error) => error);
+  assert.equal(err.kind, 'unreachable');
+  assert.ok(!err.message.includes('SECRET'), err.message);
 });
 
 test('no error message carries the token', async () => {

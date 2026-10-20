@@ -130,8 +130,8 @@ test('license and consumable triggers; a consumable is announced again once rest
   assert.deepEqual(
     world.fake.sceneEvents.map((e) => [e.key, e.data]),
     [
-      [TRIGGERS.license, { license: 'VPN', seats: 4, expires: '30/10/2026', days_left: 10 }],
       [TRIGGERS.consumable, { consumable: 'Paper A4', remaining: 3, minimum: 3 }],
+      [TRIGGERS.license, { license: 'VPN', seats: 4, expires: '30/10/2026', days_left: 10 }],
     ],
   );
   world.server.edit('consumables', 2, (row) => {
@@ -145,6 +145,29 @@ test('license and consumable triggers; a consumable is announced again once rest
   assert.deepEqual(
     world.fake.sceneEvents.slice(2).map((e) => e.data.remaining),
     [1],
+  );
+});
+
+test('each kind has its own cap: a mass import does not hide an overdue check-in', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  const template = world.server.rows('hardware')[2];
+  for (let id = 100; id < 115; id += 1) {
+    world.server.rows('hardware').push({
+      ...template,
+      id,
+      asset_tag: `IMP-${id}`,
+      assigned_to: null,
+      warranty_expires: { date: '2026-11-10', formatted: '2026-11-10' },
+    });
+  }
+  world.clock.now = NOW + 4 * DAY;
+  await world.hub.refresh();
+  const keys = world.fake.sceneEvents.map((e) => e.key);
+  assert.equal(keys.filter((key) => key === TRIGGERS.warranty).length, 10);
+  assert.deepEqual(
+    keys.filter((key) => key !== TRIGGERS.warranty),
+    [TRIGGERS.checkin],
   );
 });
 
@@ -173,9 +196,18 @@ test('a token that may only read assets: the other counts stay empty', async (t)
   assert.equal(world.fake.lastState(feature('assets')), 5);
   assert.equal(world.fake.lastState(feature('warranties_expiring')), 2);
   assert.equal(world.fake.lastState(feature('maintenances_in_progress')), 3);
+  const { content } = (await world.fake.widgetGet('deadlines', { settings: {}, language: 'en' }))
+    .data;
+  assert.deepEqual(
+    content.components.filter((c) => c.type === 'value').map((c) => c.label),
+    ['Assets', 'Checked out', 'Expiring'],
+    'no low-stock tile without the consumables',
+  );
   for (const key of ['licenses_expiring', 'consumables_low']) {
     assert.equal(world.fake.lastState(feature(key)), undefined, key);
   }
+  const test = await world.fake.action('test_connection', {});
+  assert.match(JSON.stringify(test.data), /answers: 5 asset\(s\)\./);
   world.server.state.limited = new Set();
   await world.hub.refresh();
   assert.equal(world.fake.connectionStatus.connected, false);
@@ -296,7 +328,7 @@ test('the scene action reads the week, in the configured language', async (t) =>
   world.server.goDown();
   const failed = await world.fake.sceneAction('read_week', {});
   assert.equal(failed.success, false);
-  assert.match(failed.error, /ne répond pas/);
+  assert.match(failed.error, /n'a pas pu être lu/);
 });
 
 test('test_connection reports the version and the counts', async (t) => {
