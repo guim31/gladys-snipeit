@@ -1,177 +1,544 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Snipe-IT",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Snipe-IT in Gladys: warranties and licenses expiring, checked-out assets, low consumables.",
+    "fr": "Snipe-IT dans Gladys : garanties et licences qui expirent, matériel prêté, consommables bas.",
+    "de": "Snipe-IT in Gladys: ablaufende Garantien und Lizenzen, verliehene Assets, knappes Material.",
+    "es": "Snipe-IT en Gladys: garantías y licencias que vencen, activos prestados, consumibles bajos."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-snipeit:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-snipeit/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Connect Snipe-IT",
+        "fr": "Connecter Snipe-IT",
+        "de": "Snipe-IT verbinden",
+        "es": "Conectar Snipe-IT"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Enter the address of your Snipe-IT server and a personal API token: in Snipe-IT, open your profile menu, Manage API keys, then Create new token. The user of the token needs to view assets, and if possible licenses, consumables and maintenances. The integration only reads your inventory.",
+        "fr": "Saisissez l'adresse de votre serveur Snipe-IT et un jeton d'API personnel : dans Snipe-IT, ouvrez le menu de votre profil, Gérer les clés d'API, puis Créer un nouveau jeton. L'utilisateur du jeton doit pouvoir voir les matériels et, si possible, les licences, les consommables et les maintenances. L'intégration ne fait que lire votre inventaire.",
+        "de": "Gib die Adresse deines Snipe-IT-Servers und ein persönliches API-Token ein: Öffne in Snipe-IT das Menü deines Profils, API-Schlüssel verwalten, dann Neues Token erstellen. Der Benutzer des Tokens muss Assets sehen dürfen, wenn möglich auch Lizenzen, Verbrauchsmaterial und Wartungen. Die Integration liest dein Inventar nur.",
+        "es": "Introduzca la dirección de su servidor Snipe-IT y un token de API personal: en Snipe-IT, abra el menú de su perfil, Gestionar claves de API y luego Crear nuevo token. El usuario del token debe poder ver los activos y, si es posible, las licencias, los consumibles y los mantenimientos. La integración solo lee su inventario."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://snipe-it.readme.io/reference/generating-api-tokens",
+          "label": {
+            "en": "Create an API token",
+            "fr": "Créer un jeton d'API",
+            "de": "API-Token erstellen",
+            "es": "Crear un token de API"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "Snipe-IT address",
+        "fr": "Adresse de Snipe-IT",
+        "de": "Snipe-IT-Adresse",
+        "es": "Dirección de Snipe-IT"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "placeholder": {
+        "en": "e.g. http://192.168.1.50 or https://snipeit.example.org",
+        "fr": "ex. http://192.168.1.50 ou https://snipeit.example.org",
+        "de": "z. B. http://192.168.1.50",
+        "es": "p. ej. http://192.168.1.50"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": ""
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "api_token",
+      "type": "secret",
+      "label": {
+        "en": "API token",
+        "fr": "Jeton d'API",
+        "de": "API-Token",
+        "es": "Token de API"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "required": true
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "warranty_days",
+      "type": "number",
+      "label": {
+        "en": "Warranty expiring within (days)",
+        "fr": "Garantie qui expire dans (jours)",
+        "de": "Garantie läuft ab in (Tagen)",
+        "es": "Garantía que vence en (días)"
+      },
+      "description": {
+        "en": "A warranty counts as expiring soon this many days before its end.",
+        "fr": "Une garantie compte comme bientôt expirée ce nombre de jours avant sa fin.",
+        "de": "So viele Tage vor ihrem Ende gilt eine Garantie als bald ablaufend.",
+        "es": "Una garantía se considera a punto de vencer esta cantidad de días antes de su fin."
+      },
       "required": false,
-      "default": "celsius",
+      "default": 30,
+      "min": 1,
+      "max": 365
+    },
+    {
+      "key": "license_days",
+      "type": "number",
+      "label": {
+        "en": "License expiring within (days)",
+        "fr": "Licence qui expire dans (jours)",
+        "de": "Lizenz läuft ab in (Tagen)",
+        "es": "Licencia que vence en (días)"
+      },
+      "required": false,
+      "default": 30,
+      "min": 1,
+      "max": 365
+    },
+    {
+      "key": "refresh_minutes",
+      "type": "select",
+      "label": {
+        "en": "Read Snipe-IT every",
+        "fr": "Lire Snipe-IT toutes les",
+        "de": "Snipe-IT lesen alle",
+        "es": "Leer Snipe-IT cada"
+      },
+      "required": false,
+      "default": "60",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "1 hour",
+            "fr": "1 heure",
+            "de": "1 Stunde",
+            "es": "1 hora"
+          }
+        },
+        {
+          "value": "180",
+          "label": {
+            "en": "3 hours",
+            "fr": "3 heures",
+            "de": "3 Stunden",
+            "es": "3 horas"
+          }
+        },
+        {
+          "value": "360",
+          "label": {
+            "en": "6 hours",
+            "fr": "6 heures",
+            "de": "6 Stunden",
+            "es": "6 horas"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of names and messages",
+        "fr": "Langue des noms et des messages",
+        "de": "Sprache der Namen und Meldungen",
+        "es": "Idioma de los nombres y mensajes"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Feature names are set when the device is added to Gladys.",
+        "fr": "Les noms des fonctionnalités sont fixés à l'ajout de l'appareil dans Gladys.",
+        "de": "Die Namen der Funktionen werden beim Hinzufügen des Geräts zu Gladys festgelegt.",
+        "es": "Los nombres de las funciones se fijan al añadir el dispositivo a Gladys."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "warranty_expiring",
+      "label": {
+        "en": "Warranty expiring",
+        "fr": "Garantie qui expire",
+        "de": "Garantie läuft ab",
+        "es": "Garantía que vence"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
+      "description": {
+        "en": "The warranty of an asset enters the window set in the configuration (once per asset).",
+        "fr": "La garantie d'un matériel entre dans la fenêtre réglée dans la configuration (une fois par matériel).",
+        "de": "Die Garantie eines Assets erreicht das in der Konfiguration eingestellte Fenster (einmal pro Asset).",
+        "es": "La garantía de un activo entra en el plazo configurado (una vez por activo)."
+      },
       "variables": [
         {
-          "key": "target",
+          "key": "asset",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Asset",
+            "fr": "Matériel",
+            "de": "Asset",
+            "es": "Activo"
+          }
+        },
+        {
+          "key": "asset_tag",
+          "type": "string",
+          "label": {
+            "en": "Asset tag",
+            "fr": "Numéro d'inventaire",
+            "de": "Inventarnummer",
+            "es": "Etiqueta de activo"
+          }
+        },
+        {
+          "key": "model",
+          "type": "string",
+          "label": {
+            "en": "Model",
+            "fr": "Modèle",
+            "de": "Modell",
+            "es": "Modelo"
+          }
+        },
+        {
+          "key": "expires",
+          "type": "string",
+          "label": {
+            "en": "End date",
+            "fr": "Date de fin",
+            "de": "Enddatum",
+            "es": "Fecha de fin"
+          }
+        },
+        {
+          "key": "days_left",
+          "type": "number",
+          "label": {
+            "en": "Days left",
+            "fr": "Jours restants",
+            "de": "Verbleibende Tage",
+            "es": "Días restantes"
+          }
+        }
+      ]
+    },
+    {
+      "key": "license_expiring",
+      "label": {
+        "en": "License expiring",
+        "fr": "Licence qui expire",
+        "de": "Lizenz läuft ab",
+        "es": "Licencia que vence"
+      },
+      "description": {
+        "en": "A license enters the window set in the configuration (once per license).",
+        "fr": "Une licence entre dans la fenêtre réglée dans la configuration (une fois par licence).",
+        "de": "Eine Lizenz erreicht das in der Konfiguration eingestellte Fenster (einmal pro Lizenz).",
+        "es": "Una licencia entra en el plazo configurado (una vez por licencia)."
+      },
+      "variables": [
+        {
+          "key": "license",
+          "type": "string",
+          "label": {
+            "en": "License",
+            "fr": "Licence",
+            "de": "Lizenz",
+            "es": "Licencia"
+          }
+        },
+        {
+          "key": "seats",
+          "type": "number",
+          "label": {
+            "en": "Seats",
+            "fr": "Postes",
+            "de": "Plätze",
+            "es": "Puestos"
+          }
+        },
+        {
+          "key": "expires",
+          "type": "string",
+          "label": {
+            "en": "Expiration date",
+            "fr": "Date d'expiration",
+            "de": "Ablaufdatum",
+            "es": "Fecha de vencimiento"
+          }
+        },
+        {
+          "key": "days_left",
+          "type": "number",
+          "label": {
+            "en": "Days left",
+            "fr": "Jours restants",
+            "de": "Verbleibende Tage",
+            "es": "Días restantes"
+          }
+        }
+      ]
+    },
+    {
+      "key": "consumable_low",
+      "label": {
+        "en": "Consumable below minimum",
+        "fr": "Consommable sous le seuil",
+        "de": "Verbrauchsmaterial unter Minimum",
+        "es": "Consumible bajo el mínimo"
+      },
+      "description": {
+        "en": "A consumable falls to or below its minimum quantity (again once restocked).",
+        "fr": "Un consommable descend à sa quantité minimale ou en dessous (de nouveau après réassort).",
+        "de": "Ein Verbrauchsmaterial fällt auf oder unter seine Mindestmenge (erneut nach dem Auffüllen).",
+        "es": "Un consumible llega a su cantidad mínima o baja de ella (de nuevo tras reponerlo)."
+      },
+      "variables": [
+        {
+          "key": "consumable",
+          "type": "string",
+          "label": {
+            "en": "Consumable",
+            "fr": "Consommable",
+            "de": "Verbrauchsmaterial",
+            "es": "Consumible"
+          }
+        },
+        {
+          "key": "remaining",
+          "type": "number",
+          "label": {
+            "en": "Remaining",
+            "fr": "Restant",
+            "de": "Verbleibend",
+            "es": "Restante"
+          }
+        },
+        {
+          "key": "minimum",
+          "type": "number",
+          "label": {
+            "en": "Minimum",
+            "fr": "Minimum",
+            "de": "Minimum",
+            "es": "Mínimo"
+          }
+        }
+      ]
+    },
+    {
+      "key": "checkin_overdue",
+      "label": {
+        "en": "Check-in overdue",
+        "fr": "Retour en retard",
+        "de": "Rückgabe überfällig",
+        "es": "Devolución atrasada"
+      },
+      "description": {
+        "en": "A checked-out asset passes its expected check-in date (once per loan).",
+        "fr": "Un matériel prêté dépasse sa date de retour prévue (une fois par prêt).",
+        "de": "Ein verliehenes Asset überschreitet sein erwartetes Rückgabedatum (einmal pro Ausleihe).",
+        "es": "Un activo prestado supera su fecha de devolución prevista (una vez por préstamo)."
+      },
+      "variables": [
+        {
+          "key": "asset",
+          "type": "string",
+          "label": {
+            "en": "Asset",
+            "fr": "Matériel",
+            "de": "Asset",
+            "es": "Activo"
+          }
+        },
+        {
+          "key": "asset_tag",
+          "type": "string",
+          "label": {
+            "en": "Asset tag",
+            "fr": "Numéro d'inventaire",
+            "de": "Inventarnummer",
+            "es": "Etiqueta de activo"
+          }
+        },
+        {
+          "key": "assigned_to",
+          "type": "string",
+          "label": {
+            "en": "Checked out to",
+            "fr": "Prêté à",
+            "de": "Verliehen an",
+            "es": "Prestado a"
+          }
+        },
+        {
+          "key": "expected",
+          "type": "string",
+          "label": {
+            "en": "Expected check-in",
+            "fr": "Retour prévu",
+            "de": "Erwartete Rückgabe",
+            "es": "Devolución prevista"
+          }
+        },
+        {
+          "key": "days_late",
+          "type": "number",
+          "label": {
+            "en": "Days late",
+            "fr": "Jours de retard",
+            "de": "Tage überfällig",
+            "es": "Días de retraso"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "read_week",
+      "label": {
+        "en": "Read the deadlines of the week",
+        "fr": "Lire les échéances de la semaine",
+        "de": "Fristen der Woche lesen",
+        "es": "Leer los vencimientos de la semana"
       },
-      "timeout_seconds": 15,
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ],
+      "description": {
+        "en": "Warranties, licenses, check-ins, audits and maintenances due within 7 days, and what is late.",
+        "fr": "Garanties, licences, retours, audits et maintenances des 7 prochains jours, et ce qui est en retard.",
+        "de": "Garantien, Lizenzen, Rückgaben, Audits und Wartungen der nächsten 7 Tage und alles Überfällige.",
+        "es": "Garantías, licencias, devoluciones, auditorías y mantenimientos de los próximos 7 días, y lo atrasado."
+      },
+      "timeout_seconds": 60,
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Deadlines",
+            "fr": "Échéances",
+            "de": "Fristen",
+            "es": "Vencimientos"
+          }
+        },
+        {
+          "key": "late",
+          "type": "number",
+          "label": {
+            "en": "Late",
+            "fr": "En retard",
+            "de": "Überfällig",
+            "es": "Atrasados"
+          }
+        },
+        {
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Summary text",
+            "fr": "Texte du résumé",
+            "de": "Zusammenfassung",
+            "es": "Texto del resumen"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "deadlines",
+      "label": {
+        "en": "Snipe-IT deadlines",
+        "fr": "Échéances Snipe-IT",
+        "de": "Snipe-IT-Fristen",
+        "es": "Vencimientos Snipe-IT"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Assets, loans, expiring warranties and licenses, low stock, and the deadlines of the week.",
+        "fr": "Matériels, prêts, garanties et licences qui expirent, stock bas et échéances de la semaine.",
+        "de": "Assets, Ausleihen, ablaufende Garantien und Lizenzen, knappes Material, Fristen der Woche.",
+        "es": "Activos, préstamos, garantías y licencias que vencen, stock bajo y vencimientos de la semana."
+      },
+      "icon": "box"
     }
   ]
 }

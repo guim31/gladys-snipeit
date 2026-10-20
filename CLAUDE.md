@@ -32,15 +32,20 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+src/app.js                        registers every SDK handler on the hub (shared with the tests)
+src/hub.js                        the link to Snipe-IT: reads, device, states, status, triggers, week
+src/devices.js                    the Snipe-IT device and its states
+src/snipeit/client.js             REST client (/api/v1, Bearer token, paging, error kinds)
+src/snipeit/model.js              rows -> facts, summary of a day (windows, deadlines of the week)
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
 src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/texts.js                      every text of the container, in four languages
+src/store.js                      /data/snipeit-state.json: deadlines already announced
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/fixtures/snipeit/8.8.1/      answers recorded on a real Snipe-IT 8.8.1 (demo data)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +75,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, manifest texts, widget content, feature names, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -233,3 +239,28 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Snipe-IT (relevé sur un vrai serveur v8.8.1, 20/10/2026)
+
+- API REST `/api/v1`, jeton personnel en `Authorization: Bearer`. **Sans `Accept: application/json`**, une
+  erreur d'API répond par une redirection 302 vers `/login` (HTML) : le client envoie toujours l'en-tête et
+  refuse les redirections (`redirect: 'manual'`).
+- Codes d'erreur : jeton refusé = 401 `{"error": …}` ; **utilisateur désactivé = 401
+  `{"status":"error","messages":…}`** (toutes les routes) ; droit manquant = **403** `{"message":"This action
+is unauthorized."}` ; certaines erreurs arrivent en **200** avec `status: "error"` (`messages` chaîne ou
+  objet de validation).
+- Listes `{ total, rows }`, paginées par `limit`/`offset` (plafond serveur `max_results`, 500 par défaut).
+  `/hardware` écarte par défaut les matériels archivés et supprimés. Trier par `id` pour une pagination
+  stable.
+- Textes **échappés pour le HTML** (`&amp;`, `&quot;`, `&#039;`) : `plain()` les rend tels que saisis.
+- Dates `{ date, formatted }` ; `expected_checkin` arrive en `{ datetime, formatted }`.
+- **Maintenances** : la v8.6 ajoute `completed_at` (fin réelle) ; la v8.7 renomme la fin prévue en
+  `expected_completion_date` et garde `completion_date` comme alias ; en v7, `completion_date` est la date
+  de fin réelle. `parseMaintenance` gère les trois.
+- `/version` exige un utilisateur actif ; l'intégration le tolère absent (404) ou refusé.
+- Pas d'identifiant d'instance lisible avec un jeton ordinaire : l'appareil a un id fixe
+  (`snipeit:server`), l'adresse peut changer sans orphelin. Les déclencheurs gardent dans `/data` l'adresse
+  de la base de référence : une nouvelle adresse refait une base silencieuse.
+- Installation de test en Docker : `snipe/snipe-it` + MariaDB ; les ~400 migrations prennent ~15 min
+  au premier démarrage. Sans assistant web : `php artisan snipeit:create-admin`, une ligne `settings`
+  (champ `brand` requis), `passport:client --personal`, puis `createToken()` dans tinker.
