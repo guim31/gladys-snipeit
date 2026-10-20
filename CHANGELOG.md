@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-20
+
 ### Added
 
 - A Snipe-IT device: assets, checked-out assets, warranties and licenses
@@ -25,3 +27,6 @@ the notes of the version's GitHub Release.
 - A token that may only view the assets still works: the other counts stay
   empty.
 - Texts and documentation in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-snipeit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-snipeit/releases/tag/v1.0.0
