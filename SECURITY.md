@@ -30,6 +30,16 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration holds: the Snipe-IT address and a personal API token, kept
+by Gladys in the integration configuration (never logged, never written to
+`/data`). `/data` holds a small JSON file listing the deadlines already
+announced by the scene triggers (Snipe-IT ids and dates) and the address of the
+Snipe-IT server they belong to. The container only talks to the Snipe-IT
+address, over HTTP or HTTPS, and only reads: it never writes to Snipe-IT. Use a
+token of a user who may only view, and HTTPS when Snipe-IT is not on your local
+network.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Snipe-IT itself (see the
+[Snipe-IT security policy](https://github.com/grokability/snipe-it/security/policy)).
