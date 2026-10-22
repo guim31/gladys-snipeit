@@ -1,6 +1,6 @@
 {
   "name": "gladys-snipeit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Snipe-IT asset management in Gladys Assistant: warranties, licenses, loans, consumables and deadlines.",
   "type": "module",

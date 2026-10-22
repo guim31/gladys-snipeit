@@ -8,8 +8,8 @@
     "de": "Snipe-IT in Gladys: ablaufende Garantien und Lizenzen, verliehene Assets, knappes Material.",
     "es": "Snipe-IT en Gladys: garantías y licencias que vencen, activos prestados, consumibles bajos."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-snipeit:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-snipeit:1.0.1",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-snipeit/main/cover.png",
   "categories": ["services"],
